@@ -4,7 +4,7 @@
       <div class="title-section">
         <div class="title-wrapper">
           <shopping-outlined class="title-icon" />
-          <h1>今日特价</h1>
+          <h1>桂兰超市 今日特价</h1>
         </div>
         <span class="subtitle">
           <calendar-outlined class="subtitle-icon" />
