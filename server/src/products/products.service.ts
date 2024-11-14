@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, MoreThanOrEqual } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 
@@ -48,8 +48,9 @@ export class ProductsService {
             'product.image_url as imageUrl',
             'product.valid_date as validDate'
           ])
-          .where('DATE(product.valid_date) = :date', { date: formattedDate })
-          .orderBy('product.created_at', 'DESC')
+          .where('DATE(product.valid_date) >= :date', { date: formattedDate })
+          .orderBy('product.valid_date', 'ASC')
+          .addOrderBy('product.created_at', 'DESC')
           .getRawMany();
       } else {
         return await this.tProductsRepository

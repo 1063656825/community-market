@@ -12,6 +12,9 @@
         <picture-outlined />
         <span>图片加载失败</span>
       </div>
+      <div class="discount-tag">
+        <span class="discount-percent">{{ calculateDiscount }}折</span>
+      </div>
     </div>
     <div class="product-info">
       <h3 class="product-name" :title="product.name">{{ product.name }}</h3>
@@ -24,49 +27,58 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { PictureOutlined } from '@ant-design/icons-vue';
+import { ref, computed } from 'vue'
+import { PictureOutlined } from '@ant-design/icons-vue'
 
 interface Product {
-  id: number;
-  name: string;
-  originalPrice: number;
-  discountPrice: number;
-  imageUrl: string;
-  validDate: string;
+  id: number
+  name: string
+  originalPrice: number
+  discountPrice: number
+  imageUrl: string
+  validDate: string
 }
 
-defineProps<{
+const props = defineProps<{
   product: Product
-}>();
-
-const imageError = ref(false);
-
-const handleImageError = () => {
-  imageError.value = true;
-};
+}>()
 
 defineEmits<{
   (e: 'click', product: Product): void
 }>()
+
+const imageError = ref(false)
+
+const handleImageError = () => {
+  imageError.value = true
+}
+
+const calculateDiscount = computed(() => {
+  const discount = (props.product.discountPrice / props.product.originalPrice) * 10
+  return discount.toFixed(1)
+})
 </script>
 
 <style scoped>
 .product-card {
   background: #fff;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   transition: all 0.3s;
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
+.product-card:active {
+  transform: scale(0.98);
+}
+
 .image-wrapper {
   position: relative;
   width: 100%;
-  padding-top: 120%;
+  padding-top: 100%;
   background: #f5f5f5;
   overflow: hidden;
 }
@@ -78,11 +90,7 @@ defineEmits<{
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.image-wrapper:hover .product-image {
-  transform: scale(1.05);
+  transition: transform 0.3s;
 }
 
 .image-error {
@@ -100,38 +108,49 @@ defineEmits<{
   gap: 8px;
 }
 
+.discount-tag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #ff4d4f;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
 .product-info {
-  padding: 8px 12px;
+  padding: 10px;
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
 .product-name {
-  margin: 0 0 2px;
+  margin: 0 0 6px;
   font-size: 14px;
   font-weight: 500;
   color: #333;
-  line-height: 1.2;
+  line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  min-height: 32px;
-  max-height: 32px;
+  min-height: 36px;
 }
 
 .product-price {
-  margin-top: 2px;
+  margin-top: auto;
   display: flex;
   align-items: baseline;
   gap: 4px;
 }
 
 .discount-price {
-  color: #f5222d;
-  font-size: 18px;
+  color: #ff4d4f;
+  font-size: 16px;
   font-weight: bold;
 }
 

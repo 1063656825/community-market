@@ -18,12 +18,22 @@
           :disabledDate="disabledDate"
           placeholder="选择日期"
           :allowClear="false"
-        />
+          :inputReadOnly="true"
+          :bordered="false"
+        >
+          <template #suffixIcon>
+            <calendar-outlined style="color: #1890ff" />
+          </template>
+        </a-date-picker>
       </div>
     </div>
     
     <div class="content">
       <a-spin :spinning="loading">
+        <div class="date-section">
+          <tag-outlined class="date-icon" />
+          <span>{{ dayjs(selectedDate).format('YYYY年MM月DD日') }}特价商品</span>
+        </div>
         <div class="product-list" v-if="products.length">
           <product-card
             v-for="product in products"
@@ -33,23 +43,26 @@
           />
         </div>
         <div class="empty-state" v-else>
-          <a-empty description="暂无特价商品">
+          <a-empty>
             <template #description>
-              <span class="empty-text">当前日期暂无特价商品</span>
+              <div class="empty-text">
+                <inbox-outlined class="empty-icon" />
+                <span>当前日期暂无特价商品</span>
+              </div>
             </template>
           </a-empty>
         </div>
       </a-spin>
     </div>
 
-    <!-- 商品详情弹窗 -->
     <a-modal
       v-model:visible="detailVisible"
       :footer="null"
       :closable="true"
       :maskClosable="true"
-      width="90%"
+      :width="360"
       class="product-detail-modal"
+      :destroyOnClose="true"
     >
       <div class="product-detail" v-if="selectedProduct">
         <div class="detail-image">
@@ -62,18 +75,18 @@
         <div class="detail-info">
           <h2 class="detail-name">{{ selectedProduct.name }}</h2>
           <div class="detail-prices">
-            <div class="price-item">
+            <div class="price-item current-price">
               <span class="label">特惠价</span>
-              <span class="discount-price">¥{{ selectedProduct.discountPrice }}</span>
+              <span class="price">¥{{ selectedProduct.discountPrice }}</span>
             </div>
-            <div class="price-item">
+            <div class="price-item original-price">
               <span class="label">原价</span>
-              <span class="original-price">¥{{ selectedProduct.originalPrice }}</span>
+              <span class="price">¥{{ selectedProduct.originalPrice }}</span>
             </div>
           </div>
           <div class="detail-date">
-            <span class="label">有效期至</span>
-            <span>{{ dayjs(selectedProduct.validDate).format('YYYY-MM-DD') }}</span>
+            <calendar-outlined class="date-icon" />
+            <span>有效期至：{{ dayjs(selectedProduct.validDate).format('YYYY年MM月DD日') }}</span>
           </div>
         </div>
       </div>
@@ -85,7 +98,12 @@
 import { ref, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { message } from 'ant-design-vue'
-import { ShoppingOutlined, CalendarOutlined } from '@ant-design/icons-vue'
+import { 
+  ShoppingOutlined, 
+  CalendarOutlined, 
+  TagOutlined, 
+  InboxOutlined 
+} from '@ant-design/icons-vue'
 import ProductCard from '../components/ProductCard.vue'
 import type { Dayjs } from 'dayjs'
 import dayjs from 'dayjs'
@@ -146,23 +164,20 @@ onMounted(() => {
 .home {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  padding: 12px;
+  min-height: 100vh;
   background-color: #f5f5f5;
-  box-sizing: border-box;
-  overflow: hidden;
 }
 
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   background: white;
   padding: 12px 16px;
-  border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  margin-bottom: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-shrink: 0;
 }
 
 .title-wrapper {
@@ -172,19 +187,19 @@ onMounted(() => {
 }
 
 .title-icon {
-  font-size: 20px;
+  font-size: 24px;
   color: #1890ff;
 }
 
 .title-section h1 {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   color: #1a1a1a;
   font-weight: 600;
 }
 
 .subtitle {
-  margin-top: 2px;
+  margin-top: 4px;
   color: #666;
   font-size: 12px;
   display: flex;
@@ -192,44 +207,51 @@ onMounted(() => {
   gap: 4px;
 }
 
-.subtitle-icon {
-  font-size: 12px;
+.date-section {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: #1890ff;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.date-icon {
+  font-size: 18px;
 }
 
 .content {
   flex: 1;
-  background: white;
-  padding: 12px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  overflow-y: auto;
-  position: relative;
+  padding: 0 12px 12px;
 }
 
 .product-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 12px;
-  padding: 12px;
 }
 
 .empty-state {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
+  margin-top: 60px;
   text-align: center;
 }
 
 .empty-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   color: #999;
-  font-size: 14px;
+}
+
+.empty-icon {
+  font-size: 16px;
+  color: #1890ff;
 }
 
 .product-detail {
-  padding: 16px;
+  padding: 0;
 }
 
 .detail-image {
@@ -238,7 +260,6 @@ onMounted(() => {
   padding-bottom: 100%;
   position: relative;
   background: #f5f5f5;
-  border-radius: 8px;
   overflow: hidden;
 }
 
@@ -252,13 +273,13 @@ onMounted(() => {
 }
 
 .detail-info {
-  padding: 16px 0;
+  padding: 16px;
 }
 
 .detail-name {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: #1a1a1a;
   margin: 0 0 16px;
   line-height: 1.4;
 }
@@ -269,27 +290,21 @@ onMounted(() => {
 
 .price-item {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
   margin-bottom: 8px;
 }
 
-.label {
-  color: #666;
-  font-size: 14px;
-  min-width: 60px;
-}
-
-.discount-price {
+.price-item.current-price .price {
   color: #f5222d;
   font-size: 24px;
   font-weight: bold;
 }
 
-.original-price {
+.price-item.original-price .price {
   color: #999;
   text-decoration: line-through;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .detail-date {
@@ -299,29 +314,33 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   color: #666;
+  font-size: 14px;
 }
 
 :deep(.product-detail-modal .ant-modal-content) {
-  padding: 12px;
+  padding: 0;
   border-radius: 12px;
+  overflow: hidden;
 }
 
 :deep(.product-detail-modal .ant-modal-close) {
-  top: 8px;
-  right: 8px;
+  color: white;
+  top: 12px;
+  right: 12px;
 }
 
 @media (max-width: 768px) {
-  .home {
-    padding: 8px;
-  }
-
   .header {
     padding: 10px 12px;
   }
 
-  .content {
-    padding: 8px;
+  .title-section h1 {
+    font-size: 18px;
+  }
+
+  .date-section {
+    padding: 12px;
+    font-size: 14px;
   }
 
   .product-list {
@@ -330,15 +349,11 @@ onMounted(() => {
   }
 
   .detail-name {
-    font-size: 18px;
+    font-size: 16px;
   }
 
-  .discount-price {
+  .price-item.current-price .price {
     font-size: 20px;
-  }
-
-  .original-price {
-    font-size: 14px;
   }
 }
 </style> 

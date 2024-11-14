@@ -5,8 +5,8 @@
       list-type="picture-card"
       :show-upload-list="false"
       :before-upload="beforeUpload"
-      :customRequest="customUpload"
-      @change="handleChange"
+      :customRequest="handleUpload"
+      accept="image/*"
     >
       <div v-if="!modelValue" class="upload-placeholder">
         <plus-outlined />
@@ -33,7 +33,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { PlusOutlined, PictureOutlined } from '@ant-design/icons-vue'
-import type { UploadChangeParam } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
 
 defineProps<{
@@ -62,42 +61,39 @@ const beforeUpload = (file: File) => {
   return true
 }
 
-const customUpload = async (options: any) => {
-  const { file, onSuccess, onError } = options
-  const formData = new FormData()
-  formData.append('file', file)
-  
+const handleUpload = async ({ file, onSuccess, onError }: any) => {
   try {
     loading.value = true
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData
-    })
+    const reader = new FileReader()
     
-    if (response.ok) {
-      const data = await response.json()
-      onSuccess(data)
-    } else {
-      onError()
-      message.error('上传失败')
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string
+      if (base64) {
+        emit('update:modelValue', base64)
+        onSuccess()
+      } else {
+        onError(new Error('图片转换失败'))
+        message.error('图片转换失败')
+      }
+      loading.value = false
     }
+
+    reader.onerror = () => {
+      onError(new Error('图片读取失败'))
+      message.error('图片读取失败')
+      loading.value = false
+    }
+
+    reader.readAsDataURL(file)
   } catch (error) {
-    onError()
-    message.error('上传失败')
-  } finally {
     loading.value = false
+    onError(error)
+    message.error('图片处理失败')
   }
 }
 
 const handleImageError = () => {
   imageError.value = true
-}
-
-const handleChange = (info: UploadChangeParam) => {
-  if (info.file.status === 'done') {
-    imageError.value = false
-    emit('update:modelValue', info.file.response.url)
-  }
 }
 </script>
 

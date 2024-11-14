@@ -14,7 +14,7 @@ export class Product {
   @Column('decimal', { precision: 10, scale: 2, name: 'discount_price' })
   discountPrice: number;
 
-  @Column({ name: 'image_url' })
+  @Column('longtext', { name: 'image_url' })
   imageUrl: string;
 
   @Column('date', {
