@@ -1,5 +1,5 @@
 <template>
-  <div class="product-card">
+  <div class="product-card" @click="$emit('click', product)">
     <div class="image-wrapper">
       <img 
         :src="product.imageUrl" 
@@ -45,6 +45,10 @@ const imageError = ref(false);
 const handleImageError = () => {
   imageError.value = true;
 };
+
+defineEmits<{
+  (e: 'click', product: Product): void
+}>()
 </script>
 
 <style scoped>

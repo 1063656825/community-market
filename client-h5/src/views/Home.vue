@@ -29,6 +29,7 @@
             v-for="product in products"
             :key="product.id"
             :product="product"
+            @click="showProductDetail"
           />
         </div>
         <div class="empty-state" v-else>
@@ -40,6 +41,43 @@
         </div>
       </a-spin>
     </div>
+
+    <!-- 商品详情弹窗 -->
+    <a-modal
+      v-model:visible="detailVisible"
+      :footer="null"
+      :closable="true"
+      :maskClosable="true"
+      width="90%"
+      class="product-detail-modal"
+    >
+      <div class="product-detail" v-if="selectedProduct">
+        <div class="detail-image">
+          <img 
+            :src="selectedProduct.imageUrl" 
+            :alt="selectedProduct.name"
+            @error="handleImageError"
+          />
+        </div>
+        <div class="detail-info">
+          <h2 class="detail-name">{{ selectedProduct.name }}</h2>
+          <div class="detail-prices">
+            <div class="price-item">
+              <span class="label">特惠价</span>
+              <span class="discount-price">¥{{ selectedProduct.discountPrice }}</span>
+            </div>
+            <div class="price-item">
+              <span class="label">原价</span>
+              <span class="original-price">¥{{ selectedProduct.originalPrice }}</span>
+            </div>
+          </div>
+          <div class="detail-date">
+            <span class="label">有效期至</span>
+            <span>{{ dayjs(selectedProduct.validDate).format('YYYY-MM-DD') }}</span>
+          </div>
+        </div>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -64,9 +102,21 @@ interface Product {
 const selectedDate: Ref<Dayjs> = ref(dayjs())
 const products: Ref<Product[]> = ref([])
 const loading: Ref<boolean> = ref(false)
+const detailVisible = ref(false)
+const selectedProduct: Ref<Product | null> = ref(null)
 
 const disabledDate = (current: Dayjs): boolean => {
   return current && current < dayjs().startOf('day');
+}
+
+const showProductDetail = (product: Product) => {
+  selectedProduct.value = product
+  detailVisible.value = true
+}
+
+const handleImageError = (e: Event) => {
+  const target = e.target as HTMLImageElement
+  target.src = 'https://via.placeholder.com/400x400?text=图片加载失败'
 }
 
 const loadProducts = async () => {
@@ -178,6 +228,89 @@ onMounted(() => {
   font-size: 14px;
 }
 
+.product-detail {
+  padding: 16px;
+}
+
+.detail-image {
+  width: 100%;
+  height: 0;
+  padding-bottom: 100%;
+  position: relative;
+  background: #f5f5f5;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.detail-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-info {
+  padding: 16px 0;
+}
+
+.detail-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+
+.detail-prices {
+  margin-bottom: 16px;
+}
+
+.price-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.label {
+  color: #666;
+  font-size: 14px;
+  min-width: 60px;
+}
+
+.discount-price {
+  color: #f5222d;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.original-price {
+  color: #999;
+  text-decoration: line-through;
+  font-size: 16px;
+}
+
+.detail-date {
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+}
+
+:deep(.product-detail-modal .ant-modal-content) {
+  padding: 12px;
+  border-radius: 12px;
+}
+
+:deep(.product-detail-modal .ant-modal-close) {
+  top: 8px;
+  right: 8px;
+}
+
 @media (max-width: 768px) {
   .home {
     padding: 8px;
@@ -194,6 +327,18 @@ onMounted(() => {
   .product-list {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 8px;
+  }
+
+  .detail-name {
+    font-size: 18px;
+  }
+
+  .discount-price {
+    font-size: 20px;
+  }
+
+  .original-price {
+    font-size: 14px;
   }
 }
 </style> 

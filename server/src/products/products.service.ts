@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
@@ -28,32 +28,69 @@ export class ProductsService {
     }
   }
 
-  async findAll(date: string): Promise<Product[]> {
+  async findAll(date?: string): Promise<Product[]> {
     try {
-      const searchDate = date ? new Date(date) : new Date();
-      if (isNaN(searchDate.getTime())) {
-        throw new BadRequestException('Invalid date format');
+      if (date) {
+        const searchDate = new Date(date);
+        if (isNaN(searchDate.getTime())) {
+          throw new BadRequestException('Invalid date format');
+        }
+
+        const formattedDate = searchDate.toISOString().split('T')[0];
+        
+        return await this.tProductsRepository
+          .createQueryBuilder('product')
+          .select([
+            'product.id as id',
+            'product.name as name',
+            'product.original_price as originalPrice',
+            'product.discount_price as discountPrice',
+            'product.image_url as imageUrl',
+            'product.valid_date as validDate'
+          ])
+          .where('DATE(product.valid_date) = :date', { date: formattedDate })
+          .orderBy('product.created_at', 'DESC')
+          .getRawMany();
+      } else {
+        return await this.tProductsRepository
+          .createQueryBuilder('product')
+          .select([
+            'product.id as id',
+            'product.name as name',
+            'product.original_price as originalPrice',
+            'product.discount_price as discountPrice',
+            'product.image_url as imageUrl',
+            'product.valid_date as validDate'
+          ])
+          .orderBy('product.created_at', 'DESC')
+          .getRawMany();
       }
-
-      const formattedDate = searchDate.toISOString().split('T')[0];
-      
-      const products = await this.tProductsRepository
-        .createQueryBuilder('product')
-        .select([
-          'product.id as id',
-          'product.name as name',
-          'product.original_price as originalPrice',
-          'product.discount_price as discountPrice',
-          'product.image_url as imageUrl',
-          'product.valid_date as validDate'
-        ])
-        .where('DATE(product.valid_date) = :date', { date: formattedDate })
-        .orderBy('product.created_at', 'DESC')
-        .getRawMany();
-
-      return products;
     } catch (error) {
       throw new BadRequestException(error.message);
     }
+  }
+
+  async findOne(id: number): Promise<Product> {
+    const product = await this.tProductsRepository.findOne({ where: { id } });
+    if (!product) {
+      throw new NotFoundException(`商品ID ${id} 不存在`);
+    }
+    return product;
+  }
+
+  async remove(id: number): Promise<void> {
+    const product = await this.findOne(id);
+    await this.tProductsRepository.remove(product);
+  }
+
+  async update(id: number, updateProductDto: CreateProductDto): Promise<Product> {
+    const product = await this.findOne(id);
+    
+    const updatedProduct = this.tProductsRepository.merge(product, {
+      ...updateProductDto,
+      validDate: new Date(updateProductDto.validDate)
+    });
+    
+    return await this.tProductsRepository.save(updatedProduct);
   }
 } 

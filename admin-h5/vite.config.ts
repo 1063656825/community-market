@@ -15,9 +15,10 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        rewrite: (path) => path.replace(/^\/api/, '/api')
       }
-    }
+    },
+    historyApiFallback: true
   },
   build: {
     rollupOptions: {
@@ -26,4 +27,4 @@ export default defineConfig({
       }
     }
   }
-}) 
+})

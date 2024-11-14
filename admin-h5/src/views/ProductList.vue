@@ -11,7 +11,12 @@
     <div class="content">
       <a-spin :spinning="loading">
         <div class="card-list" v-if="products.length">
-          <div v-for="product in products" :key="product.id" class="product-card">
+          <div 
+            v-for="product in products" 
+            :key="product.id" 
+            class="product-card"
+            @click="handleCardClick(product)"
+          >
             <div class="card-image">
               <img :src="product.imageUrl" :alt="product.name" @error="handleImageError">
             </div>
@@ -24,11 +29,16 @@
               <div class="valid-date">
                 有效期至：{{ formatDate(product.validDate) }}
               </div>
-              <div class="card-actions">
-                <a-button type="link" @click="$router.push(`/products/${product.id}/edit`)">
-                  <edit-outlined />
-                  编辑
-                </a-button>
+              <div class="card-actions" @click.stop>
+                <a-popconfirm
+                  title="确定要删除这个商品吗？"
+                  @confirm="handleDelete(product.id)"
+                >
+                  <a-button type="link" danger>
+                    <delete-outlined />
+                    删除
+                  </a-button>
+                </a-popconfirm>
               </div>
             </div>
           </div>
@@ -48,7 +58,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
-import { PlusOutlined, EditOutlined } from '@ant-design/icons-vue'
+import { useRouter } from 'vue-router'
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 import dayjs from 'dayjs'
 
 interface Product {
@@ -60,6 +71,7 @@ interface Product {
   validDate: string;
 }
 
+const router = useRouter()
 const loading = ref(false)
 const products = ref<Product[]>([])
 
@@ -78,11 +90,35 @@ const loadProducts = async () => {
     const response = await fetch('/api/t_products')
     if (response.ok) {
       products.value = await response.json()
+    } else {
+      message.error('加载失败')
     }
   } catch (error) {
+    console.error('Error:', error)
     message.error('加载失败')
   } finally {
     loading.value = false
+  }
+}
+
+const handleCardClick = (product: Product) => {
+  router.push(`/products/${product.id}/edit`)
+}
+
+const handleDelete = async (id: number) => {
+  try {
+    const response = await fetch(`/api/t_products/${id}`, {
+      method: 'DELETE'
+    })
+    if (response.ok) {
+      message.success('删除成功')
+      loadProducts() // 重新加载列表
+    } else {
+      message.error('删除失败')
+    }
+  } catch (error) {
+    console.error('Error:', error)
+    message.error('删除失败')
   }
 }
 
